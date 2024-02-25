@@ -14,9 +14,6 @@ sys.path.append("../python")
 
 from computers import *
 
-pin_1 = True # Pin 9
-pin_2 = False # Pin 10
-
 class colors:
     INFO = '\33[36M'
     OK = '\033[92m'
@@ -24,6 +21,10 @@ class colors:
     NOTFOUND = '\033[31m'
     ERROR = '\033[91m'
     END = '\033[0m'
+
+pin_1 = True # Pin 9
+pin_2 = False # Pin 10
+
 
 def status(str, element, status):
     text = f"{str} : {element}"
@@ -91,7 +92,6 @@ def visusalize(x_data, y_data, z_data):
     # Show plot in Jupyter notebook
     fig.show()
 
-
 def get_x_coordinate(data: str) -> np.int64:
     x_coordinate = re.findall(r'\b\d+\b', data)
     if x_coordinate:
@@ -107,7 +107,7 @@ def save_coordinate(x: int, theta, omega) -> np.array:
     x_cord = np.multiply(x, np.sin(theta))
     y_cord = np.multiply(x_cord, np.sin(omega))
     z_cord = np.multiply(x, np.cos(theta))
-    print_coordinate([x_cord, y_cord, z_cord], theta, omega)
+    # print_coordinate([x_cord, y_cord, z_cord], theta, omega)
     return np.around(np.array([x_cord, y_cord, z_cord, theta, omega]), 3)
 
 def generate_mock_coordiantes(num):
@@ -137,16 +137,16 @@ def simulate(yaws,
     omega = 0
     for i in range(yaws):
         omega += increment
-        theta = 0
+        theta = np.divide(np.negative(np.pi), 2)
         fake_cords = generate_mock_coordiantes(1000)
         x_cords, y_cords, z_cords = fake_cords
         for j in range(pitches):
             fake_frame.loc[len(fake_frame)] = save_coordinate(x_cords[j], theta, omega)
             theta += increment
     save_data("mock_coordinates", fake_frame)
-    print(f'Simulation complete ...')
+    # print(f'Simulation complete ...')
     
-simulate(yaws=200, pitches=100, increments=1.1)
+simulate(yaws=400, pitches=200, increments=1.8)
 
 status("Visualizing", "loading simulation data", "OK")
 
