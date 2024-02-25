@@ -42,7 +42,7 @@ def status(str, element, status):
     else:
         print(text)
             
-def visusalize(x_data, y_data, z_data):
+def visualize(x_data, y_data, z_data):
     status("Loading", "rendering plot", "OK")
     # Create trace for scatter plot
     trace = go.Scatter3d(
@@ -100,14 +100,14 @@ def get_x_coordinate(data: str) -> np.int64:
         return np.int64(-1)
     
 def print_coordinate(cords: np.array, theta, omega):
-    print(f'X: {cords[0]}, Y: {cords[1]}, Z: {cords[2]} | Θ: {theta}, ω: {omega}')
+    print(f'X: {cords[0]}, Y: {cords[1]}, Z: {cords[2]} | 0: {theta}, w: {omega}')
 
 def save_coordinate(x: int, theta, omega) -> np.array:
     # Perform math to get accurate coordinates
-    x_cord = np.multiply(x, np.sin(theta))
-    y_cord = np.multiply(x_cord, np.sin(omega))
     z_cord = np.multiply(x, np.cos(theta))
-    # print_coordinate([x_cord, y_cord, z_cord], theta, omega)
+    y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
+    x_cord = np.multiply(np.multiply(x, np.sin(theta)), np.cos(omega))
+    #print_coordinate([x_cord, y_cord, z_cord], theta, omega)
     return np.around(np.array([x_cord, y_cord, z_cord, theta, omega]), 3)
 
 def generate_mock_coordiantes(num):
@@ -146,7 +146,7 @@ def simulate(yaws,
     save_data("mock_coordinates", fake_frame)
     # print(f'Simulation complete ...')
     
-simulate(yaws=400, pitches=200, increments=1.8)
+simulate(yaws=400, pitches=400, increments=0.45)
 
 status("Visualizing", "loading simulation data", "OK")
 
@@ -158,4 +158,4 @@ z_plot = data['z']
 
 status("Visualizing", "data loaded", "OK")
 
-visusalize(x_plot, y_plot, z_plot)
+visualize(x_plot, y_plot, z_plot)
