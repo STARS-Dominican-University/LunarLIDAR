@@ -1,5 +1,7 @@
 # LunarLIDAR
-![nasa_stars](https://github.com/STARS-Dominican-University/LunarLIDAR/assets/70508631/f88257f8-5a1c-4f5b-a074-3cb5669ae99b)
+![sphere-inner](https://github.com/STARS-Dominican-University/LunarLIDAR/assets/70508631/360bafb3-9f83-45ac-8c4d-96d9d9fa406c)
+![sphere](https://github.com/STARS-Dominican-University/LunarLIDAR/assets/70508631/5f7e52f7-a878-4508-8db9-0e96b83b7972)
+
 
 
 ## Finding USB Port number
