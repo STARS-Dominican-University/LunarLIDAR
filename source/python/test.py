@@ -107,7 +107,7 @@ def save_coordinate(x: int, theta, omega) -> np.array:
     z_cord = np.multiply(x, np.cos(theta))
     y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
     x_cord = np.multiply(np.multiply(x, np.sin(theta)), np.cos(omega))
-    print_coordinate([x_cord, y_cord, z_cord], theta, omega)
+    #print_coordinate([x_cord, y_cord, z_cord], theta, omega)
     return np.around(np.array([x_cord, y_cord, z_cord, theta, omega]), 3)
 
 def generate_mock_coordiantes(num):
@@ -146,7 +146,48 @@ def simulate(yaws,
     save_data("mock_coordinates", fake_frame)
     # print(f'Simulation complete ...')
     
-simulate(yaws=400, pitches=400, increments=0.45)
+coordinates_frame = pd.DataFrame(columns=['x', 'y', 'z', 'angle_1', 'angle_2'])
+
+ser = sr.Serial(port=PABLOS_COMPUTER_MAC, baudrate=9600)  # Adjust the serial port and baud rate
+print(f'Connection to port {ser} is established ...')
+
+increment = np.divide(np.multiply(2, np.pi), 180)
+omega = 0
+theta = 0
+counter = 0
+while True:
+    if counter > 50:
+        break
+    if theta > 1.57:
+        omega += increment
+        theta = np.divide(np.negative(np.pi), 2)
+    
+    # Read data from the serial port
+    data = ser.readline().decode('utf-8').strip()
+    
+    # Get lidar points
+    x = get_x_coordinate(data)
+
+    coordinates = save_coordinate(x, theta, omega)
+    coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
+    print_coordinate(coordinates, theta, omega)
+    theta += increment
+
+    # LIDAR logic
+    if pin_1:
+        pin_1 = False
+        pin_2 = True
+    else:
+        pin_1 = True
+        pin_2 = False
+        
+    if omega > 3.14:
+        break
+    
+    counter += 1
+    print(counter)
+    
+    save_data("mock_coordinates", coordinates_frame)
 
 status("Visualizing", "loading simulation data", "OK")
 
@@ -159,3 +200,15 @@ z_plot = data['z']
 status("Visualizing", "data loaded", "OK")
 
 visualize(x_plot, y_plot, z_plot)
+
+'''status("Visualizing", "loading simulation data", "OK")
+
+data = pd.read_csv('../../data/mock_coordinates.csv')
+
+x_plot = data['x']
+y_plot = data['y']
+z_plot = data['z']
+
+status("Visualizing", "data loaded", "OK")
+
+visualize(x_plot, y_plot, z_plot)'''
