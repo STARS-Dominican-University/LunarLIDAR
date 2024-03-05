@@ -129,22 +129,7 @@ def save_data(file_name: str, data: pd.DataFrame):
         os.remove(file_path)
     data.to_csv("../../data/mock_coordinates.csv")
     
-def simulate(yaws,
-             pitches,
-             increments):
-    fake_frame = pd.DataFrame(columns=['x', 'y', 'z', 'angle_1', 'angle_2'])
-    increment = np.divide(np.multiply(increments, np.pi), 180)
-    omega = 0
-    for i in range(yaws):
-        omega += increment
-        theta = np.divide(np.negative(np.pi), 2)
-        fake_cords = generate_mock_coordiantes(1000)
-        x_cords, y_cords, z_cords = fake_cords
-        for j in range(pitches):
-            fake_frame.loc[len(fake_frame)] = save_coordinate(x_cords[j], theta, omega)
-            theta += increment
-    save_data("mock_coordinates", fake_frame)
-    # print(f'Simulation complete ...')
+
     
 coordinates_frame = pd.DataFrame(columns=['x', 'y', 'z', 'angle_1', 'angle_2'])
 
@@ -200,15 +185,3 @@ z_plot = data['z']
 status("Visualizing", "data loaded", "OK")
 
 visualize(x_plot, y_plot, z_plot)
-
-'''status("Visualizing", "loading simulation data", "OK")
-
-data = pd.read_csv('../../data/mock_coordinates.csv')
-
-x_plot = data['x']
-y_plot = data['y']
-z_plot = data['z']
-
-status("Visualizing", "data loaded", "OK")
-
-visualize(x_plot, y_plot, z_plot)'''

@@ -18,7 +18,7 @@ void setup() {
   radio.setDataRate(RF24_250KBPS);
   radio.startListening();
 }
-
+z
 void loop() {
   char data_in[32] = "";
   radio.read(&data_in, sizeof(data_in));
