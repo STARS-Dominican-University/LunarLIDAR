@@ -2,11 +2,14 @@ from plotly.offline import plot
 import plotly.graph_objs as go
 import plotly.express as px
 import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+import pyqtgraph as pg
 import numpy as np
 import pandas as pd
 import serial as sr
 import regex as re
 import random
+import time
 import sys
 import os
 
@@ -104,21 +107,13 @@ def print_coordinate(cords: np.array):
     status("Coordinates", f'X: {x}, Y: {y}, Z: {z} | 0: {t}, w: {o}', "INFO")
 
 def save_coordinate(coords:np.array) -> np.array:
-    # np.divide(np.multiply(increments, np.pi), 180)
     
     x = coords[0]
-    theta = coords[1]
-    omega = coords[2]
-    
-    theta = np.divide(np.multiply(theta, np.pi), 180)
-    omega = np.divide(np.multiply(omega, np.pi), 180)
-    
-        
-    # Perform math to get accurate coordinates
+    theta = np.divide(np.multiply(coords[1], np.pi), 180)
+    omega = np.divide(np.multiply(coords[2], np.pi), 180)    
     z_cord = np.multiply(x, np.cos(theta))
     y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
     x_cord = np.multiply(np.multiply(x, np.sin(theta)), np.cos(omega))
-    #print_coordinate([x_cord, y_cord, z_cord], theta, omega)
     return np.around(np.array([x_cord, y_cord, z_cord, theta, omega]), 3)
 
 def save_data(file_name: str, data: pd.DataFrame):
@@ -127,14 +122,14 @@ def save_data(file_name: str, data: pd.DataFrame):
         os.remove(file_path)
     data.to_csv(f"../../data/{file_name}.csv")
     
-
-    
+     
 coordinates_frame = pd.DataFrame(columns=['x', 'y', 'z', 'theta', 'omega'])
 
 ser = sr.Serial(port=PABLOS_COMPUTER_MAC, baudrate=9600)  # Adjust the serial port and baud rate
 status("Serial Connection", f"connection to port {ser} is established", "OK")
 
 iter = 0
+
 while iter < 150:
     
     # LIDAR logic
@@ -155,10 +150,8 @@ while iter < 150:
         continue
     else:
         coordinates = save_coordinate(get_coords) # array with cords
-    
         coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
         print_coordinate(coordinates)
-
         save_data("lunar_point_cloud", coordinates_frame)
         
         iter += 1
