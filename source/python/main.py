@@ -1,15 +1,9 @@
 from plotly.offline import plot
 import plotly.graph_objs as go
-import plotly.express as px
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import pyqtgraph as pg
 import numpy as np
 import pandas as pd
 import serial as sr
 import regex as re
-import random
-import time
 import sys
 import os
 
@@ -24,10 +18,6 @@ class colors:
     NOTFOUND = '\033[31m'
     ERROR = '\033[91m'
     END = '\033[0m'
-
-pin_1 = True # Pin 3
-pin_2 = False # Pin 2
-
 
 def status(str, element, status):
     text = f"{str} : {element}"
@@ -68,7 +58,7 @@ def visualize(x_data, y_data, z_data):
             zaxis=dict(visible=False),  # Hide z-axis
             aspectmode='manual',  # Fix aspect ratio
             aspectratio=dict(x=1, y=1, z=1),  # Set aspect ratio to 1:1:1
-            bgcolor='black'  # Set background color to black
+            bgcolor='black',  # Set background color to black
         ),
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=False,  # Hide legend
@@ -122,14 +112,15 @@ def save_data(file_name: str, data: pd.DataFrame):
         os.remove(file_path)
     data.to_csv(f"../../data/{file_name}.csv")
     
-     
+pin_1 = True # Pin 3
+pin_2 = False # Pin 2
+
 coordinates_frame = pd.DataFrame(columns=['x', 'y', 'z', 'theta', 'omega'])
 
 ser = sr.Serial(port=PABLOS_COMPUTER_MAC, baudrate=9600)  # Adjust the serial port and baud rate
 status("Serial Connection", f"connection to port {ser} is established", "OK")
 
 iter = 0
-
 while iter < 150:
     
     # LIDAR logic
