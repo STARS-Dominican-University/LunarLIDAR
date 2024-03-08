@@ -4,10 +4,11 @@
 
 #define TRANSMITTER_CSN 8
 #define TRANSMITTER_CE 7
+#define ADDRESS "00001"
 
 RF24 radio(TRANSMITTER_CE, TRANSMITTER_CSN);
 
-const byte address[6] = "00001";
+const byte address[6] = ADDRESS;
 
 void setup() {
   // put your setup code here, to run once:

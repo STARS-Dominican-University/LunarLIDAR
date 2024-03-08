@@ -22,8 +22,8 @@ class colors:
     ERROR = '\033[91m'
     END = '\033[0m'
 
-pin_1 = True # Pin 9
-pin_2 = False # Pin 10
+pin_1 = True # Pin 3
+pin_2 = False # Pin 2
 
 
 def status(str, element, status):
@@ -92,17 +92,28 @@ def visualize(x_data, y_data, z_data):
     # Show plot in Jupyter notebook
     fig.show()
 
-def get_x_coordinate(data: str) -> np.int64:
-    x_coordinate = re.findall(r'\b\d+\b', data)
-    if x_coordinate:
-        return np.int64(x_coordinate[0])
+def get_coordinates(data: str):        
+    coords = list(map(int, re.findall(r'\w+:(\d+)', data)))
+    if coords:
+        return np.array(coords).astype(np.int64)
     else:
         return np.int64(-1)
-    
-def print_coordinate(cords: np.array, theta, omega):
-    print(f'X: {cords[0]}, Y: {cords[1]}, Z: {cords[2]} | 0: {theta}, w: {omega}')
+ 
+def print_coordinate(cords: np.array):
+    x, y, z, t, o = cords
+    status("Coordinates", f'X: {x}, Y: {y}, Z: {z} | 0: {t}, w: {o}', "INFO")
 
-def save_coordinate(x: int, theta, omega) -> np.array:
+def save_coordinate(coords:np.array) -> np.array:
+    # np.divide(np.multiply(increments, np.pi), 180)
+    
+    x = coords[0]
+    theta = coords[1]
+    omega = coords[2]
+    
+    theta = np.divide(np.multiply(theta, np.pi), 180)
+    omega = np.divide(np.multiply(omega, np.pi), 180)
+    
+        
     # Perform math to get accurate coordinates
     z_cord = np.multiply(x, np.cos(theta))
     y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
@@ -110,54 +121,22 @@ def save_coordinate(x: int, theta, omega) -> np.array:
     #print_coordinate([x_cord, y_cord, z_cord], theta, omega)
     return np.around(np.array([x_cord, y_cord, z_cord, theta, omega]), 3)
 
-def generate_mock_coordiantes(num):
-    x = np.around(np.random.uniform(low=0, high=1000, size=(num, )), 3)
-    y = np.around(np.random.uniform(low=0, high=1000, size=(num, )), 3)
-    z = np.around(np.random.uniform(low=0, high=1000, size=(num, )), 3)
-    return np.array([x, y, z])
-
-def generate_mock_measurements(num):
-    measurement = []
-    for _ in range(num):
-        x = np.random.randint(0, 2000)
-        measurement.append(f'{x} cm')
-    return np.array(measurement)
-
 def save_data(file_name: str, data: pd.DataFrame):
     file_path = f'../../data/{file_name}.csv'
     if os.path.exists(file_path):
         os.remove(file_path)
-    data.to_csv("../../data/mock_coordinates.csv")
+    data.to_csv(f"../../data/{file_name}.csv")
     
 
     
-coordinates_frame = pd.DataFrame(columns=['x', 'y', 'z', 'angle_1', 'angle_2'])
+coordinates_frame = pd.DataFrame(columns=['x', 'y', 'z', 'theta', 'omega'])
 
 ser = sr.Serial(port=PABLOS_COMPUTER_MAC, baudrate=9600)  # Adjust the serial port and baud rate
-print(f'Connection to port {ser} is established ...')
+status("Serial Connection", f"connection to port {ser} is established", "OK")
 
-increment = np.divide(np.multiply(2, np.pi), 180)
-omega = 0
-theta = 0
-counter = 0
-while True:
-    if counter > 50:
-        break
-    if theta > 1.57:
-        omega += increment
-        theta = np.divide(np.negative(np.pi), 2)
+iter = 0
+while iter < 150:
     
-    # Read data from the serial port
-    data = ser.readline().decode('utf-8').strip()
-    
-    # Get lidar points
-    x = get_x_coordinate(data)
-
-    coordinates = save_coordinate(x, theta, omega)
-    coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
-    print_coordinate(coordinates, theta, omega)
-    theta += increment
-
     # LIDAR logic
     if pin_1:
         pin_1 = False
@@ -166,17 +145,28 @@ while True:
         pin_1 = True
         pin_2 = False
         
-    if omega > 3.14:
-        break
+    # Read data from the serial port
+    data = ser.readline().decode('utf-8').replace(" ", "")
+    status("Arduino data", data, "FOUND")
+    get_coords = get_coordinates(data)
+    status("Get data", get_coords, "FOUND")
     
-    counter += 1
-    print(counter)
+    if (get_coords == -1).any():
+        continue
+    else:
+        coordinates = save_coordinate(get_coords) # array with cords
     
-    save_data("mock_coordinates", coordinates_frame)
+        coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
+        print_coordinate(coordinates)
+
+        save_data("lunar_point_cloud", coordinates_frame)
+        
+        iter += 1
+        status("Iter", iter, "INFO")
 
 status("Visualizing", "loading simulation data", "OK")
 
-data = pd.read_csv('../../data/mock_coordinates.csv')
+data = pd.read_csv('../../data/lunar_point_cloud.csv')
 
 x_plot = data['x']
 y_plot = data['y']
