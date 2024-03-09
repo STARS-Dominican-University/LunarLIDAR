@@ -31,6 +31,10 @@ RF24 radio(TRANSMITTER_CE, TRANSMITTER_CSN);
 int cal_cnt = 0;
 bool alternate = false;
 
+// PITCH
+int pitch_down = false;
+int current_pitch = 0;
+
 void setup()
 {
   radio.begin();
@@ -94,12 +98,8 @@ void loop()
 
     servo1.write(omega);
     delay(10);
-    servo2.write(omega);
-    delay(10);
-    char transmit_data[32] = "";
-    sprintf(transmit_data, "x: %d, o: %d, w: %d", x, int(omega), int(omega));
-    radio.write(&transmit_data, strlen(transmit_data) + 1);
-    delay(10);
+
+    transmit_data(x, current_pitch, omega);
 
     if (alternate)
     {
@@ -130,13 +130,34 @@ void loop()
     cal_cnt = cal_cnt % 100;
     servo3.write(omega);
     delay(10);
-    servo4.write(omega);
-    delay(10);
-    sprintf(transmit_data, "x: %d, o: %d, w: %d", x, int(omega), int(omega));
-    radio.write(&transmit_data, strlen(transmit_data) + 1);
-    delay(10);
+
+    transmit_data(x, current_pitch, omega);
   }
   delay(10);
+  if (pitch_down)
+  {
+    servo2.write(current_pitch);
+    delay(10);
+    current_pitch -= 1.8;
+  }
+  else
+  {
+    servo2.write(current_pitch);
+    delay(10);
+    current_pitch += 1.8;
+  }
+  if (pitch_down)
+  {
+    servo4.write(current_pitch);
+    delay(10);
+    current_pitch -= 1.8;
+  }
+  else
+  {
+    servo4.write(current_pitch);
+    delay(10);
+    current_pitch += 1.8;
+  }
 
   // Sweep yaw from 180 to 0 degrees
   for (float omega = 180; omega >= 0; omega -= 1.8)
@@ -170,12 +191,8 @@ void loop()
     cal_cnt = cal_cnt % 100;
     servo1.write(omega);
     delay(10);
-    servo2.write(omega);
-    delay(10);
-    char transmit_data[32] = "";
-    sprintf(transmit_data, "x: %d, o: %d, w: %d", x, int(omega), int(omega));
-    radio.write(&transmit_data, strlen(transmit_data) + 1);
-    delay(10);
+
+    transmit_data(x, current_pitch, omega);
 
     if (alternate)
     {
@@ -206,13 +223,45 @@ void loop()
     cal_cnt = cal_cnt % 100;
     servo3.write(omega);
     delay(10);
-    servo4.write(omega);
-    delay(10);
-    sprintf(transmit_data, "x: %d, o: %d, w: %d", x, int(omega), int(omega));
-    radio.write(&transmit_data, strlen(transmit_data) + 1);
-    delay(10);
+
+    transmit_data(x, current_pitch, omega);
   }
   delay(10);
+
+  if (pitch_down)
+  {
+    servo2.write(current_pitch);
+    delay(10);
+    current_pitch -= 1.8;
+  }
+  else
+  {
+    servo2.write(current_pitch);
+    delay(10);
+    current_pitch += 1.8;
+  }
+  if (pitch_down)
+  {
+    servo4.write(current_pitch);
+    delay(10);
+    current_pitch -= 1.8;
+  }
+  else
+  {
+    servo4.write(current_pitch);
+    delay(10);
+    current_pitch += 1.8;
+  }
+
+  if (current_pitch > 180)
+  {
+    pitch_down = true;
+  }
+
+  if (current_pitch < 0)
+  {
+    pitch_down = false;
+  }
 }
 
 void enableLidar(int lidar_pin)
@@ -224,4 +273,29 @@ void disableLidar(int lidar_pin)
 {
   digitalWrite(lidar_pin, LOW);
   delay(100);
+}
+
+void transmit_data(int x, int theta, int omega)
+{
+  char data[32] = "";
+
+  char x_str[12];
+  char theta_str[12];
+  char omega_str[12];
+
+  itoa(x, x_str, 10);
+  itoa(theta, theta_str, 10);
+  itoa(omega, omega_str, 10);
+
+  // Concatenate strings into transmit_data
+  strcpy(data, "x: ");
+  strcat(data, x_str);
+  strcat(data, ", o: ");
+  strcat(data, theta_str);
+  strcat(data, ", w: ");
+  strcat(data, omega_str); // Assuming you meant to use omega twice
+
+  // Write data to radio
+  radio.write(&data, strlen(data) + 1);
+  delay(10);
 }

@@ -9,7 +9,7 @@ import os
 
 sys.path.append("../python")
 
-from computers import *
+from computers import * 
 
 class colors:
     INFO = '\33[36M'
@@ -96,21 +96,28 @@ def print_coordinate(cords: np.array):
     x, y, z, t, o = cords
     status("Coordinates", f'X: {x}, Y: {y}, Z: {z} | 0: {t}, w: {o}', "INFO")
 
-def save_coordinate(coords:np.array) -> np.array:
+def save_coordinate(coords:np.array, lidar:int) -> np.array:
     
     x = coords[0]
     theta = np.divide(np.multiply(coords[1], np.pi), 180)
     omega = np.divide(np.multiply(coords[2], np.pi), 180)    
-    z_cord = np.multiply(x, np.cos(theta))
-    y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
-    x_cord = np.multiply(np.multiply(x, np.sin(theta)), np.cos(omega))
+    
+    if lidar == 1:
+        z_cord = np.multiply(x, np.cos(theta))
+        y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
+        x_cord = np.multiply(np.multiply(x, np.sin(theta)), np.cos(omega))
+    
+    if lidar == 2:
+        z_cord = np.multiply(x, np.cos(theta))
+        y_cord = np.multiply(np.multiply(x, np.sin(theta)), np.sin(omega))
+        x_cord = -np.multiply(np.multiply(x, np.sin(theta)), np.cos(omega))
     return np.around(np.array([x_cord, y_cord, z_cord, theta, omega]), 3)
 
 def save_data(file_name: str, data: pd.DataFrame):
     file_path = f'../../data/{file_name}.csv'
     if os.path.exists(file_path):
         os.remove(file_path)
-    data.to_csv(f"../../data/{file_name}.csv")
+    data.to_csv(f"../../data/{file_name}.csv", index=False)
     
 pin_1 = True # Pin 3
 pin_2 = False # Pin 2
@@ -121,7 +128,7 @@ ser = sr.Serial(port=PABLOS_COMPUTER_MAC, baudrate=9600)  # Adjust the serial po
 status("Serial Connection", f"connection to port {ser} is established", "OK")
 
 iter = 0
-while iter < 150:
+while iter < 1000:
     
     # LIDAR logic
     if pin_1:
@@ -133,17 +140,29 @@ while iter < 150:
         
     # Read data from the serial port
     data = ser.readline().decode('utf-8').replace(" ", "")
-    status("Arduino data", data, "FOUND")
-    get_coords = get_coordinates(data)
-    status("Get data", get_coords, "FOUND")
+    
+    if pin_1:
+        status("Arduino data (LIDAR 1)", data, "FOUND")
+        get_coords = get_coordinates(data)
+        status("Get data (LIDAR 1)", get_coords, "FOUND")
+    else:
+        status("Arduino data (lIDAR 2)", data, "FOUND")
+        get_coords = get_coordinates(data)
+        status("Get data (LIDAR 2)", get_coords, "FOUND")
     
     if (get_coords == -1).any():
         continue
     else:
-        coordinates = save_coordinate(get_coords) # array with cords
-        coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
-        print_coordinate(coordinates)
-        save_data("lunar_point_cloud", coordinates_frame)
+        if pin_1:
+            coordinates = save_coordinate(get_coords, 1) # array with cords
+            coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
+            print_coordinate(coordinates)
+            save_data("lunar_point_cloud", coordinates_frame)
+        else:
+            coordinates = save_coordinate(get_coords, 2) # array with cords
+            coordinates_frame.loc[len(coordinates_frame.index)] = coordinates
+            print_coordinate(coordinates)
+            save_data("lunar_point_cloud", coordinates_frame)
         
         iter += 1
         status("Iter", iter, "INFO")
