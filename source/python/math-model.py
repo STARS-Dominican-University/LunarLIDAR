@@ -151,6 +151,8 @@ simulate(yaws=400, pitches=400, increments=0.45)
 status("Visualizing", "loading simulation data", "OK")
 
 data = pd.read_csv('../../data/mock_coordinates.csv')
+data = pd.read_csv('../../data/lunar_point_cloud.csv')
+
 
 x_plot = data['x']
 y_plot = data['y']
