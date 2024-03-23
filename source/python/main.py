@@ -128,7 +128,7 @@ ser = sr.Serial(port=PABLOS_COMPUTER_MAC, baudrate=9600)  # Adjust the serial po
 status("Serial Connection", f"connection to port {ser} is established", "OK")
 
 iter = 0
-while iter < 1000:
+while iter < 6000:
     
     # LIDAR logic
     if pin_1:
